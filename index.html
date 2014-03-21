@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <!-- Pull the engine from the Quintus CDN or load it locally -->
+    <!-- (use quintus-all.min.js for production) -->
+    <script src='http://cdn.html5quintus.com/v0.2.0/quintus-all.js'></script>
+
+  </head>
+   <body>
+   <script>
+
+      var Q = Quintus().include("Sprites, Input, Scenes, Anim").setup({maximize: true}).controls();
+      var pos = randomPos(); //the position fatty starts at
+      var interval =  randomInterval(); //the interval between movements
+
+      function randomPos() //returns a random position inside the window
+      {
+          return Math.floor((Math.random() * (window.innerWidth - 300)) + 300);
+      }
+
+      function randomInterval() //determines the interval between fattasses movements
+      {
+         return Math.floor((Math.random() * 1000) + 100); //random interval between 100-1000
+      }
+
+      Q.Sprite.extend("Fatty", {
+        init: function(p) {
+          this._super({
+            asset: "fatty.png",
+            x: pos,
+            y: window.innerHeight - 200,
+            vx: 50,
+            g: 9800
+          });
+
+            this.add("tween");
+
+        },
+
+
+
+
+        step: function(dt) {
+
+          interval--;
+
+          if(interval == 0)
+          {
+              interval = randomInterval();
+              var newPos = randomPos();
+              this.animate({ x : newPos}, 2, Q.Easing.Quadratic.InOut); //moving fatty to the new position once the interval is finished, takes 2 seconds and accelerates and decelearates 
+          }
+
+
+        }
+
+      });
+
+      // Make sure fatty.png is loaded
+      Q.load("fatty.png",function() {
+         var fatty = new Q.Fatty();
+
+         Q.gameLoop(function(dt) {
+           Q.clear();
+           fatty.update(dt);
+           fatty.render(Q.ctx);
+
+         });
+       });
+
+   </script>
+   </body>
+</html>

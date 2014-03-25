@@ -74,7 +74,7 @@ window.addEventListener("load",function() {
 		init: function(p) {
 			this._super({
 				asset: "floor.png",
-				x: 0,
+				x: 500,
 				y: window.innerHeight
 			})
 		}

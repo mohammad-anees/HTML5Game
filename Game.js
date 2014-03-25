@@ -30,7 +30,7 @@ window.addEventListener("load",function() {
 	    this.on("hit.sprite", function(collision) {
 
 	    	if(collision.obj.isA("Orange")) {
-	    		this.destroy();
+	    		//this.destroy();
 	    	}
 	    })
 	},
@@ -56,11 +56,18 @@ window.addEventListener("load",function() {
 				asset: "food.png",
 				x: pos_orange,
 				y: 20,
-				vy: 40,
+				vx: 0,
 				g: 9800
 			});
 
 		this.add("2d");
+
+		this.on("hit.sprite", function(collision) {
+
+			if(collision.obj.isA("Floor")) {
+				this.p.vy /= -2;
+			}
+		})
 
 		},
 

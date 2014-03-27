@@ -1,6 +1,6 @@
 window.addEventListener("load",function() {
 
-	var Q = Quintus().include("Sprites, Input, Scenes, Anim, 2D, Touch")
+	var Q = Quintus().include("Sprites, Input, Scenes, Anim, 2D, Touch, UI")
 	Q.setup({maximize: true}).touch(Q.SPRITE_ALL);
 	var interval =  randomInterval(); //the interval between movements
 
@@ -9,6 +9,8 @@ window.addEventListener("load",function() {
 
 	var _vx = 0;
 	var _vy = 0;
+
+	var _score = window.innerWidth/2;
 
 	function randomPos() //returns a random position inside the window
 	{
@@ -22,12 +24,14 @@ window.addEventListener("load",function() {
 
 	function randomGoodFood() //determines the good food to load next
 	{
-		var rand = Math.floor((Math.random() * 2 ) + 1);
+		var rand = Math.floor((Math.random() * 3 ) + 1);
 
 		if(rand == 1)
 			return "food_1.png";
 		else if(rand == 2)
 			return "food_2.png";
+		else if(rand == 3)
+			return "food_3.png";
 		else
 			return "error";
 	}
@@ -50,7 +54,7 @@ window.addEventListener("load",function() {
 		var obj = Q.stage().locate(0,0);
 
 		if(_x <= 300 && _y <= 300)
-			obj.animate({ x : _x * 100, y: _y * 100}, 40, Q.Easing.Quadratic.Out);
+			obj.animate({ x : _x * 100, y: _y * 100, angle: 360 * 10}, 40, Q.Easing.Quadratic.Out);
 
 	}
 
@@ -106,14 +110,15 @@ window.addEventListener("load",function() {
 
 			else if(collision.obj.isA("Fatty")) {
 				this.destroy();
+				_score += 5;
 			}
 		})
 
 		},
 
 		step: function(dt){
-				document.onmousemove = getMousePosition;
-				document.onmousedown = DrawSomething;
+			document.onmousemove = getMousePosition;
+			document.onmousedown = DrawSomething;
 
 		}
 
@@ -130,12 +135,35 @@ window.addEventListener("load",function() {
 
 	})
 
+	Q.Sprite.extend("ScoreBoard", {
+		init: function(p) {
+			this._super({
+				asset: "stick.png",
+				x: window.innerWidth/2,
+				y: window.innerHeight - 10
+			})
+		},
+
+		step: function(dt){
+			this.p.x = _score;
+
+			if(_score >= (window.innerWidth/2 + 150))
+				Q.clearStages();
+
+
+		}
+
+
+	})
+
+
 	Q.scene("level1",function(stage) {
 
 		var fatass = stage.insert(new Q.Fatty());
 		var orange = stage.insert(new Q.Food());
 		var orange2 = stage.insert(new Q.Food());
 		var floor = stage.insert(new Q.Floor());
+		var score = stage.insert(new Q.ScoreBoard());
 
 		orange.p.y = _y;
 		orange.p.x = _x;
@@ -143,7 +171,8 @@ window.addEventListener("load",function() {
 
 
 	// Make sure fatty.png is loaded
-	Q.load("fatty.png, food_1.png, food_2.png, floor.png, sky.jpg",function() {
+	Q.load("fatty.png, food_1.png, food_2.png, food_3.png, floor.png, sky.jpg, stick.png",function() {
 		Q.stageScene("level1", 0);
+
 	});
 });

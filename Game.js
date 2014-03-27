@@ -1,18 +1,46 @@
 window.addEventListener("load",function() {
 
-	var Q = Quintus().include("Sprites, Input, Scenes, Anim, 2D").setup({maximize: true}).controls();
+	var Q = Quintus().include("Sprites, Input, Scenes, Anim, 2D, Touch")
+	Q.setup({maximize: true}).touch(Q.SPRITE_ALL);
 	var interval =  randomInterval(); //the interval between movements
+
+	var _x = 0;
+	var _y = 0;
 
 	function randomPos() //returns a random position inside the window
 	{
-	  return Math.floor((Math.random() * (window.innerWidth - 300)) + 300);
+	 	return Math.floor((Math.random() * (window.innerWidth - 300)) + 300);
 	}
 
 	function randomInterval() //determines the interval between fattasses movements
 	{
-	 return Math.floor((Math.random() * 150) + 100); //random interval between 100-150
+		return Math.floor((Math.random() * 150) + 100); //random interval between 100-150
 	}
 
+	function randomGoodFood() //determines the good food to load next
+	{
+		var rand = Math.floor((Math.random() * 2 ) + 1);
+
+		if(rand == 1)
+			return "food_1.png";
+		else if(rand == 2)
+			return "food_2.png";
+		else
+			return "error";
+	}
+
+	function getMousePosition(mp)
+	{
+		_x = mp.pageX;
+		_y = mp.pageY;
+
+		return true;
+	}
+
+	function DrawSomething(mp)
+	{
+		Q.stage(0).insert(new Q.Food());
+	}
 
 	Q.Sprite.extend("Fatty", {
 	init: function(p) {
@@ -20,19 +48,13 @@ window.addEventListener("load",function() {
 	  	this._super({
 	    	asset: "fatty.png",
 	    	x: pos_fatty,
-	    	y: window.innerHeight - 200,
-	    	vx: 50,
+	    	y: 300,
+	    	vx: 0,
 	    	g: 9800
 	  });
 
-	    this.add("tween");
+	    this.add("tween, 2d");
 
-	    this.on("hit.sprite", function(collision) {
-
-	    	if(collision.obj.isA("Orange")) {
-	    		//this.destroy();
-	    	}
-	    })
 	},
 
 	step: function(dt) {
@@ -49,15 +71,17 @@ window.addEventListener("load",function() {
 	}
 	});
 
-	Q.Sprite.extend("Orange", {
+	Q.Sprite.extend("Food", {
 		init: function(p) {
 			var pos_orange = randomPos();
+			var food = randomGoodFood();
 			this._super({
-				asset: "food.png",
-				x: pos_orange,
-				y: 20,
+				asset: food,
+				x: _x,
+				y: _y,
 				vx: 0,
-				g: 9800
+				vy: 0,
+				g: 10000
 			});
 
 		this.add("2d");
@@ -65,16 +89,24 @@ window.addEventListener("load",function() {
 		this.on("hit.sprite", function(collision) {
 
 			if(collision.obj.isA("Floor")) {
-				this.p.vy /= -2;
+				this.p.vy = -(1/2);
+			}
+
+			else if(collision.obj.isA("Fatty")) {
+				this.destroy();
 			}
 		})
 
 		},
 
 		step: function(dt){
-			if(this.p.y >= window.outerHeight)
-				this.destroy();
+				document.onmousemove = getMousePosition;
+
+
+				document.onmousedown = DrawSomething;
+
 		}
+
 	})
 
 	Q.Sprite.extend("Floor", {
@@ -85,18 +117,23 @@ window.addEventListener("load",function() {
 				y: window.innerHeight
 			})
 		}
+
 	})
 
 	Q.scene("level1",function(stage) {
 
 		var fatass = stage.insert(new Q.Fatty());
-		var orange = stage.insert(new Q.Orange());
-		var orange2 = stage.insert(new Q.Orange());
+		var orange = stage.insert(new Q.Food());
+		var orange2 = stage.insert(new Q.Food());
 		var floor = stage.insert(new Q.Floor());
+
+		orange.p.y = _y;
+		orange.p.x = _x;
 	});
 
+
 	// Make sure fatty.png is loaded
-	Q.load("fatty.png, food.png, floor.png",function() {
-	 Q.stageScene("level1");
+	Q.load("fatty.png, food_1.png, food_2.png, floor.png, sky.jpg",function() {
+		Q.stageScene("level1", 0);
 	});
 });

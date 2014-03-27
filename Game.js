@@ -7,6 +7,9 @@ window.addEventListener("load",function() {
 	var _x = 0;
 	var _y = 0;
 
+	var _vx = 0;
+	var _vy = 0;
+
 	function randomPos() //returns a random position inside the window
 	{
 	 	return Math.floor((Math.random() * (window.innerWidth - 300)) + 300);
@@ -34,12 +37,21 @@ window.addEventListener("load",function() {
 		_x = mp.pageX;
 		_y = mp.pageY;
 
+		_vx = (_x/60);
+		_vy = (_y/60);
+
 		return true;
 	}
 
 	function DrawSomething(mp)
 	{
 		Q.stage(0).insert(new Q.Food());
+
+		var obj = Q.stage().locate(0,0);
+
+		if(_x <= 300 && _y <= 300)
+			obj.animate({ x : _x * 100, y: _y * 100}, 40, Q.Easing.Quadratic.Out);
+
 	}
 
 	Q.Sprite.extend("Fatty", {
@@ -77,14 +89,14 @@ window.addEventListener("load",function() {
 			var food = randomGoodFood();
 			this._super({
 				asset: food,
-				x: _x,
-				y: _y,
+				x: 0,
+				y: 0,
 				vx: 0,
 				vy: 0,
 				g: 10000
 			});
 
-		this.add("2d");
+		this.add("tween");
 
 		this.on("hit.sprite", function(collision) {
 
@@ -101,8 +113,6 @@ window.addEventListener("load",function() {
 
 		step: function(dt){
 				document.onmousemove = getMousePosition;
-
-
 				document.onmousedown = DrawSomething;
 
 		}

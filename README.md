@@ -1,4 +1,4 @@
 HTML5Game
 =========
 
-Group assignment 2
+HTML5 Game for CSCE 315

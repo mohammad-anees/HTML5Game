@@ -1,0 +1,130 @@
+<html>
+  <head>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+<script>
+      var socket = io.connect();
+	  
+	  socket.on('message',function(data){
+		console.log(data.message);
+	  });
+</script>
+<script>	  
+$(document).ready(function(){
+	  
+$("#player_1").hide();
+$("#player_2").hide();
+$("#player_1_a").hide();
+$("#player_1_b").hide();
+$("#player_2_a").hide();
+$("#player_2_b").hide();
+$("#textbox_a").hide();
+$("#textbox_b").hide();
+//$("p").hide();
+
+	
+	//Whenever we press a key in the textbox, we will send the letter to the server
+	$("#textbox_a").keypress(function(data){
+		socket.emit('p1_pressed', { 'letter' : String.fromCharCode(data.charCode)} );
+	});
+	//Same here
+	$("#textbox_b").keypress(function(data){
+		socket.emit('p2_pressed', { 'letter' : String.fromCharCode(data.charCode)} );
+	});
+	
+	//Once we get a response, we output the value
+	socket.on('getp1_box',function(data){
+		$("#p1_box").text(data.letter);
+	});
+	socket.on('getp2_box',function(data){
+		$("#p2_box").text(data.letter);
+	});
+		
+	//Buttons pressed
+	socket.on('p1_button_A',function(data){
+	
+		$('#p1_button').text(data.letter);
+	});
+	
+	socket.on('p1_button_B',function(data){
+	
+		$('#p1_button').text(data.letter);
+	});
+	
+	socket.on('p2_button_A',function(data){
+	
+		$('#p2_button').text(data.letter);
+	});
+	
+	socket.on('p2_button_B',function(data){
+	
+		$('#p2_button').text(data.letter);
+	});
+		
+		
+	$("#start_button").click(function(){
+	
+		$(this).hide();
+		$("#player_1").show();
+		$("#player_2").show();
+	});
+	
+	$("#player_1").click(function(){
+	
+		$(this).hide();
+		$("#textbox_a").show();
+		$("#player_2").hide();
+		$("#player_1_a").show();
+		$("#player_1_b").show();
+	});
+	
+	$("#player_2").click(function(){
+	
+		$(this).hide();
+		$("#textbox_b").show();
+		$("#player_1").hide();
+		$("#player_2_a").show();
+		$("#player_2_b").show();
+		
+	});
+	
+	$("#player_1_a").click(function(){
+			
+		socket.emit('p1_pushed_A', { 'letter' : 'A'} );	
+	});
+	
+	$("#player_1_b").click(function(){
+			
+		socket.emit('p1_pushed_B', { 'letter' : 'B'} );	
+	});
+	
+	$("#player_2_a").click(function(){
+			
+		socket.emit('p2_pushed_A', { 'letter' : 'A'} );	
+	});
+	
+	$("#player_2_b").click(function(){
+			
+		socket.emit('p2_pushed_B', { 'letter' : 'B'} );	
+	});
+	
+});
+</script>
+<body>
+    <div>This is our socket.html file</div>
+	<p>Player 1 clicked: <span id="p1_button"></span> </p>
+	<p>Player 2 clicked: <span id="p2_button"></span> </p>
+	<p>Player 1 pressed: <span id="p1_box"></span> </p>
+	<p>Player 2 pressed: <span id="p2_box"></span> </p>
+	<input id= "textbox_a">
+	<input id= "textbox_b">
+	<button type ="button" id="start_button">Start</button>
+	<button type ="button" id="player_1">Player 1</button>
+	<button type ="button" id="player_2">Player 2</button>
+	<button type ="button" id="player_1_a">A</button>
+	<button type ="button" id="player_1_b">B</button>
+	<button type ="button" id="player_2_a">A</button>
+	<button type ="button" id="player_2_b">B</button>
+  </body>
+</html>

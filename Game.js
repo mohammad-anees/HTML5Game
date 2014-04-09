@@ -66,12 +66,23 @@ window.addEventListener("load",function() {
 	function DrawSomething(mp)
 	{
 
-		_vx = (_mousex/2);
-		_vy = (_mousey/2);
+		if(_mousex > (window.innerWidth/1.25))
+			_mousex = window.innerWidth/1.25;
+		if(_mousey > (window.innerHeight/1.25))
+			_mousey = window.innerHeight/1.25;
+
+		_vx = (_mousex);
+		_vy = (_mousey);
 
 		Q.stage(1).insert(new Q.Food());
 
 		var obj = Q.stage(1).locate(0,0);
+
+		var angle_rad = (_angle * Math.PI)/180;
+
+		obj.p.x = Math.cos(angle_rad) * 125;
+		obj.p.y = Math.sin(angle_rad) * 125;
+
 		obj.p.vx = _vx;
 		obj.p.vy = _vy;
 
@@ -115,8 +126,6 @@ window.addEventListener("load",function() {
 			var food = randomGoodFood();
 			this._super({
 				asset: food,
-				x: 0,
-				y: 0,
 				vx: 0,
 				vy: 0,
 				g: 1000

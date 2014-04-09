@@ -79,7 +79,6 @@ window.addEventListener("load",function() {
 		var obj = Q.stage(1).locate(0,0);
 
 		var angle_rad = (_angle * Math.PI)/180;
-
 		obj.p.x = Math.cos(angle_rad) * 125;
 		obj.p.y = Math.sin(angle_rad) * 125;
 

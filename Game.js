@@ -1,25 +1,35 @@
 window.addEventListener("load",function() {
 
-	var Q = Quintus().include("Sprites, Input, Scenes, Anim, 2D, Touch, UI")
-	Q.setup({maximize: true}).touch(Q.SPRITE_ALL);
+	//initializing the quintus engine that will show up on the page
+	var Q = Quintus().include("Sprites, Input, Scenes, Anim, 2D, UI") 
+	Q.setup({maximize: true});
+
+	//--------------------------------------------------------------
+	//--------------------------------------------------------------
+	//initalizing global variables used throughout
+
 	var interval =  randomInterval(); //the interval between movements
 
-	var _x = 0;
-	var _y = 0;
+	var _mousex = 0; //global var used to get the mouse position x
+	var _mousey = 0; //global var used to get the mouse positoin y
 
-	var _vx = 0;
-	var _vy = 0;
+	var _vx = 0; //global var used for velocity x
+	var _vy = 0; //global var used for velocity y
 
-	var _angle = 45;
+	var _angle = 45; //inital angle of the cannon, also global
 
-	var _score = window.innerWidth/2;
+	var _score = window.innerWidth/2; //score of the game
+
+	//----------------------------------------------------------------
+	//----------------------------------------------------------------
+	//some helper functions used throughout
 
 	function randomPos() //returns a random position inside the window
 	{
 	 	return Math.floor((Math.random() * (window.innerWidth - 300)) + 300);
 	}
 
-	function randomInterval() //determines the interval between fattasses movements
+	function randomInterval() //determines the interval between reedtards movements
 	{
 		return Math.floor((Math.random() * 150) + 100); //random interval between 100-150
 	}
@@ -40,15 +50,12 @@ window.addEventListener("load",function() {
 
 	function getMousePosition(mp)
 	{
-		_x = mp.pageX;
-		_y = mp.pageY;
-
-		_vx = (_x/60);
-		_vy = (_y/60);
+		_mousex = mp.pageX;
+		_mousey = mp.pageY;
 
 		//Calc Cannon angle here
 
-		_angle = Math.atan(_y / _x);
+		_angle = Math.atan(_mousey / _mousex);
 		_angle *= (180/Math.PI)
 
 		//
@@ -59,16 +66,20 @@ window.addEventListener("load",function() {
 	function DrawSomething(mp)
 	{
 
-		if(_x <= 400 && _y <= 400)
-		{
-			Q.stage(1).insert(new Q.Food());
+		_vx = (_mousex/2);
+		_vy = (_mousey/2);
 
-			var obj = Q.stage(1).locate(0,0);
+		Q.stage(1).insert(new Q.Food());
 
-			obj.animate({ x : _x * 100, y: _y * 100, angle: 360 * 10}, 60, Q.Easing.Quadratic.Out);
-		}
+		var obj = Q.stage(1).locate(0,0);
+		obj.p.vx = _vx;
+		obj.p.vy = _vy;
+
 
 	}
+	//-------------------------------------------------------------------
+	//-------------------------------------------------------------------
+	// Quintus sprite decleration/definitions
 
 	Q.Sprite.extend("Fatty", {
 	init: function(p) {
@@ -101,7 +112,6 @@ window.addEventListener("load",function() {
 
 	Q.Sprite.extend("Food", {
 		init: function(p) {
-			var pos_orange = randomPos();
 			var food = randomGoodFood();
 			this._super({
 				asset: food,
@@ -109,7 +119,7 @@ window.addEventListener("load",function() {
 				y: 0,
 				vx: 0,
 				vy: 0,
-				g: 10000
+				g: 1000
 			});
 
 		this.add("tween");
@@ -117,7 +127,7 @@ window.addEventListener("load",function() {
 		this.on("hit.sprite", function(collision) {
 
 			if(collision.obj.isA("Floor")) {
-				//this.destroy();
+				this.destroy();
 			}
 
 			else if(collision.obj.isA("Fatty")) {
@@ -129,8 +139,10 @@ window.addEventListener("load",function() {
 		},
 
 		step: function(dt){
-			document.onmousemove = getMousePosition;
-			document.onmousedown = DrawSomething;
+
+			this.p.vy += this.p.g * dt;
+			this.p.y += this.p.vy * dt;
+			this.p.x += this.p.vx * dt;
 
 		}
 
@@ -147,7 +159,8 @@ window.addEventListener("load",function() {
 		},
 
 		step: function(dt) {
-			//document.onmousemove = getMousePosition;
+			document.onmousemove = getMousePosition;
+			document.onmousedown = DrawSomething;
 			this.p.angle = _angle;
 		}
 	})
@@ -226,20 +239,18 @@ window.addEventListener("load",function() {
 		}
 	})
 
-
+	//--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	//Quintus scene definitions
 
 	Q.scene("level1",function(stage) {
 
 		var reedtard = stage.insert(new Q.Fatty());
-		var orange2 = stage.insert(new Q.Food());
 	
 		var floor = stage.insert(new Q.Floor());
 		var prog_bar = stage.insert(new Q.ProgBar());
 		var score = stage.insert(new Q.ScoreBoard());
 
-
-		//orange.p.y = _y;
-		//orange.p.x = _x;
 	});
 
 	Q.scene("level2", function(stage) {
@@ -252,14 +263,6 @@ window.addEventListener("load",function() {
 										speedX: 4,
 										type: 0
 										}));
-								
-	// stage.insert(new Q.Repeater({ asset: "bush.png",
-	// 									repeatX: true,
-	// 									repeatY: false,
-	// 									speedX:   13,
-	// 									y: 400
-	// 									}));
-
 
 	var view = stage.insert(new Q.View());
 	stage.add("viewport").follow(view);
@@ -271,8 +274,10 @@ window.addEventListener("load",function() {
 		var el_canon = stage.insert(new Q.Cannon());
 	})
 
+	//-----------------------------------------------------------------
+	//-----------------------------------------------------------------
+	//Quintus loading all assets and executing the game code
 
-	// Make sure fatty.png is loaded
 	Q.load("fatty.png, food_1.png, food_2.png, food_3.png, floor.png, sky.png, stick.png, bush.png, view.png, meter_bar.png, cannon.png",function() {
 		Q.stageScene("cannnon",2);
 		Q.stageScene("level1", 1);

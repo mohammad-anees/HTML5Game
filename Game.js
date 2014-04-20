@@ -1,24 +1,31 @@
 window.addEventListener("load",function() {
 
 	//initializing the quintus engine that will show up on the page
-	var Q = Quintus().include("Sprites, Input, Scenes, Anim, 2D, UI") 
+	var Q = Quintus().include("Sprites, Input, Scenes, Anim, 2D, UI, Audio")
 	Q.setup({maximize: true});
 
 	//--------------------------------------------------------------
 	//--------------------------------------------------------------
 	//initalizing global variables used throughout
 
-	var interval =  randomInterval(); //the interval between movements
+	var _interval =  randomInterval(); //the interval between movements
 
-	var _mousex = 0; //global var used to get the mouse position x
-	var _mousey = 0; //global var used to get the mouse positoin y
+	var _mouse_x= 0; //global var used to get the mouse position x
+	var _mouse_y = 0; //global var used to get the mouse positoin y
+	
+	var _window_height = window.innerHeight;
+	var _window_width = window.innerWidth; 
 
-	var _vx = 0; //global var used for velocity x
-	var _vy = 0; //global var used for velocity y
+	var _velocity_x = 0;
+	var _velocity_y = 0;
 
-	var _angle = 45; //inital angle of the cannon, also global
+	var _angle_player1 = 45; //inital angle of the player 1 cannon, also global
+	var _angle_player2 = 225; //inital angle of the player 2 cannon
 
-	var _score = window.innerWidth/2; //score of the game
+	var _scale_player1 = 1; //initial scales of player 1 and 2, used for powerups
+	var _scale_player2 = 1; 
+
+	var _score = _window_width/2; //score of the game
 
 	//----------------------------------------------------------------
 	//----------------------------------------------------------------
@@ -26,12 +33,12 @@ window.addEventListener("load",function() {
 
 	function randomPos() //returns a random position inside the window
 	{
-	 	return Math.floor((Math.random() * (window.innerWidth - 300)) + 300);
+	 	return Math.floor((Math.random() * (_window_width - 300)) + 300);
 	}
 
 	function randomInterval() //determines the interval between reedtards movements
 	{
-		return Math.floor((Math.random() * 150) + 100); //random interval between 100-150
+		return Math.floor((Math.random() * 10) + 100); //random interval between 100-150
 	}
 
 	function randomGoodFood() //determines the good food to load next
@@ -39,53 +46,127 @@ window.addEventListener("load",function() {
 		var rand = Math.floor((Math.random() * 3 ) + 1);
 
 		if(rand == 1)
-			return "food_1.png";
+			return "apple.png";
 		else if(rand == 2)
-			return "food_2.png";
+			return "orange.png";
 		else if(rand == 3)
-			return "food_3.png";
+			return "grape.png";
 		else
 			return "error";
 	}
 
-	function getMousePosition(mp)
+	function randomBadFood()
 	{
-		_mousex = mp.pageX;
-		_mousey = mp.pageY;
+		var rand = Math.floor((Math.random() * 3) + 1);
 
-		//Calc Cannon angle here
-
-		_angle = Math.atan(_mousey / _mousex);
-		_angle *= (180/Math.PI)
-
-		//
-
-		return true;
+		if(rand == 1)
+			return "beer.png";
+		else if(rand == 2)
+			return "steroids.png";
+		else if(rand == 3)
+		 	return "fries.png";
+		else 
+			return "error";
 	}
 
-	function DrawSomething(mp)
+	function randomPowerUP()
+	{
+		var rand = Math.floor((Math.random() * 2) + 1);
+
+		if(rand == 1)
+			return "rapidfire";
+		else if(rand == 2)
+			return "2xmulti";
+		else if(rand == 3)
+			return "2xscale";
+
+	}
+
+	function calcCanonAngle(player_id) //calculates the angle for player1/2 canons
+	{
+		if(player_id == 1) //if player 1
+		{
+			_angle_player1 = Math.atan(_mouse_y/_mouse_x);
+			_angle_player1 *= (180/Math.PI);
+		}
+
+		if(player_id == 2) //if player 2
+		{
+			var adjusted_x = _window_width - _mouse_x
+			_angle_player2 = Math.atan(adjusted_x/_mouse_y);
+			_angle_player2 *= (180/Math.PI);
+			_angle_player2 += 90;
+		}
+	}
+
+	function getMousePosition(mp)
+	{
+		_mouse_x = mp.pageX;
+		_mouse_y = mp.pageY;
+
+		calcCanonAngle(1);
+		calcCanonAngle(2);
+
+	}
+
+	function shootFood(player_id) //function that handles the shooting based on player selection
+	{
+		if(player_id == 1) //if player 1
+			shootGoodFood;
+		else if(player_id == 2) //if player 2
+			shootBadFood;
+	}
+
+	function shootGoodFood() //function used for player one shooting
 	{
 
-		if(_mousex > (window.innerWidth/1.25))
-			_mousex = window.innerWidth/1.25;
-		if(_mousey > (window.innerHeight/1.25))
-			_mousey = window.innerHeight/1.25;
+		if(_mouse_x > (_window_width/1.25))
+			_mouse_x = _window_width/1.25;
+		if(_mouse_y > (_window_height/1.25))
+			_mouse_y = _window_height/1.25;
 
-		_vx = (_mousex);
-		_vy = (_mousey);
+		_velocity_x = (_mouse_x);
+		_velocity_y = (_mouse_y);
 
-		Q.stage(1).insert(new Q.Food());
+		Q.stage(1).insert(new Q.GoodFood());
 
 		var obj = Q.stage(1).locate(0,0);
 
-		var angle_rad = (_angle * Math.PI)/180;
+		//moving the newly created sprite object to the start point which
+		//is at the mouth of the canon
+		var angle_rad = (_angle_player1 * Math.PI)/180;
 		obj.p.x = Math.cos(angle_rad) * 125;
 		obj.p.y = Math.sin(angle_rad) * 125;
 
-		obj.p.vx = _vx;
-		obj.p.vy = _vy;
+		//setting the initial x and y velocities of the sprite
+		obj.p.velocity_x = _velocity_x;
+		obj.p.velocity_y = _velocity_y;
 
 
+	}
+
+	function shootBadFood() //function used for player two shooting
+	{
+
+		if(_mouse_x < (_window_width/4))
+		 	_mouse_x = _window_width/4;
+		if(_mouse_y > (_window_height/1.25))
+			_mouse_y = _window_height/1.25;
+
+		_velocity_x = ((_window_width) - _mouse_x);
+		_velocity_y = (_mouse_y);
+
+		Q.stage(1).insert(new Q.BadFood());
+
+		var food = Q.stage(1).locate(0,0);
+
+		//moving the new sprite obect to the start point at the mouth of the canon
+		var angle_rad = (_angle_player2 * Math.PI)/180; //converting player 2 angle to radian
+		food.p.x = (Math.cos(angle_rad) * 125) + _window_width;
+		food.p.y = Math.sin(angle_rad) * 125;
+
+		food.p.velocity_x = -_velocity_x;
+		food.p.velocity_y = _velocity_y;
 	}
 	//-------------------------------------------------------------------
 	//-------------------------------------------------------------------
@@ -98,7 +179,7 @@ window.addEventListener("load",function() {
 	    	asset: "fatty.png",
 	    	x: pos_fatty,
 	    	y: 300,
-	    	vx: 0,
+	    	velocity_x: 0,
 	    	g: 9800
 	  });
 
@@ -106,27 +187,27 @@ window.addEventListener("load",function() {
 
 	},
 
-	step: function(dt) {
+		step: function(dt) {
 
-	  interval--;
+		  _interval--;
 
-	  if(interval == 0)
-	  {
-	      interval = randomInterval();
-	      var newPos = randomPos();
-	      //moving fatty to the new position once the interval is finished, takes 2 seconds and accelerates and decelearates
-	      this.animate({ x : newPos}, 3, Q.Easing.Quadratic.InOut);  
-	  }
-	}
+		  if(_interval == 0)
+		  {
+		      _interval = randomInterval();
+		      var newPos = randomPos();
+		      //moving fatty to the new position once the interval is finished, takes 2 seconds and accelerates and decelearates
+		      this.animate({ x : newPos}, 2, Q.Easing.Quadratic.InOut);  
+		  }
+		}
 	});
 
-	Q.Sprite.extend("Food", {
+	Q.Sprite.extend("GoodFood", {
 		init: function(p) {
 			var food = randomGoodFood();
 			this._super({
 				asset: food,
-				vx: 0,
-				vy: 0,
+				velocity_x: 0,
+				velocity_y: 0,
 				g: 1000
 			});
 
@@ -134,29 +215,72 @@ window.addEventListener("load",function() {
 
 		this.on("hit.sprite", function(collision) {
 
-			if(collision.obj.isA("Floor")) {
-				this.destroy();
-			}
-
-			else if(collision.obj.isA("Fatty")) {
+			if(collision.obj.isA("Fatty")) {
 				this.destroy();
 				_score += 5;
 			}
+
+			// else if(collision.obj.isA("Food")) {
+			// 	this.p.velocity_x *=-1;
+			// }
 		})
 
 		},
 
 		step: function(dt){
 
-			this.p.vy += this.p.g * dt;
-			this.p.y += this.p.vy * dt;
-			this.p.x += this.p.vx * dt;
+			this.p.velocity_y += this.p.g * dt;
+			this.p.y += this.p.velocity_y * dt;
+			this.p.x += this.p.velocity_x * dt;
+
+			if(this.p.y >= _window_height + 100)
+				this.destroy();
 
 		}
 
 	})
 
-	Q.Sprite.extend("Cannon", {
+	Q.Sprite.extend("BadFood", {
+		init: function(p) {
+			var food = randomBadFood();
+			this._super({
+				asset: food,
+				velocity_x: 0,
+				velocity_y: 0,
+				g: 1000
+			});
+
+		this.add("tween");
+
+		this.on("hit.sprite", function(collision) {
+
+			if(collision.obj.isA("Fatty")) {
+				this.destroy();
+				_score -= 5;
+			}
+
+			 else if(collision.obj.isA("PowerUP_2xscale")) {
+				_scale_player2 = 10;
+				this.destroy();
+			 }
+		})
+
+		},
+
+		step: function(dt){
+
+			this.p.velocity_y += this.p.g * dt;
+			this.p.y += this.p.velocity_y * dt;
+			this.p.x += this.p.velocity_x * dt;
+
+			if(this.p.y >= _window_height + 100)
+				this.destroy();
+
+		}
+
+	})
+
+	Q.Sprite.extend("Player1", {
 		init: function(p) {
 			this._super({
 				asset: "cannon.png",
@@ -168,9 +292,46 @@ window.addEventListener("load",function() {
 
 		step: function(dt) {
 			document.onmousemove = getMousePosition;
-			document.onmousedown = DrawSomething;
-			this.p.angle = _angle;
+			document.onmousedown = shootGoodFood;
+			this.p.angle = _angle_player1;
 		}
+	})
+
+	Q.Sprite.extend("Player2", {
+		init: function(p) {
+			this._super({
+				asset: "cannon.png",
+				x: _window_width,
+				y: 0,
+				angle: 225
+			})
+		},
+
+		step: function(dt) {
+			//document.onmousemove = getMousePosition;
+			document.onmousedown = shootBadFood;
+			this.p.angle = _angle_player2;
+		}
+	})
+
+	Q.Sprite.extend("PowerUP_2xscale", {
+		init: function(p) {
+			this._super({
+				asset: "2xscale.png",
+				x: _window_width/2 ,
+				y: 400,
+
+			});
+
+		this.on("hit.sprite", function(collision) {
+
+			// if(collision.obj.isA("BadFood"))
+			// {
+			// 	this.destroy();
+			// }
+		})
+	}
+
 	})
 
 	Q.Sprite.extend("Floor", {
@@ -178,32 +339,59 @@ window.addEventListener("load",function() {
 			this._super({
 				asset: "floor.png",
 				x: 500,
-				y: window.innerHeight
+				y: _window_height
 			})
 		}
-
 	})
 
-	Q.Sprite.extend("ScoreBoard", {
+	Q.Sprite.extend("ScoreMarker", {
 		init: function(p) {
 			this._super({
 				asset: "stick.png",
-				x: window.innerWidth/2,
-				y: window.innerHeight - 50
+				x: _window_width/2,
+				y: _window_height - 50
 			})
 		},
 
 		step: function(dt){
 			this.p.x = _score;
 
-			if(_score >= (window.innerWidth/2 + 500))
+			if(_score >= (_window_width/2 + 500))
 				Q.stageScene("endGame",1, { label: "You Won!" });
 
 
 		}
-
-
 	})
+
+
+	Q.Sprite.extend("View", {
+		init:function(p) {
+			this._super({
+				asset: "view.png",
+				x: _window_width/2,
+				y: _window_height/2
+			})
+		},
+
+		step: function(dt){
+			this.p.x += .5;
+		}
+	})
+
+	Q.Sprite.extend("ProgBar", {
+		init:function(p) {
+			this._super({
+				asset: "progbar.png",
+				x: _window_width/2,
+				y: _window_height - 50
+
+			})
+		}
+	})
+
+	//--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	//Quintus scene definitions
 
 	Q.scene('endGame',function(stage) {
 	  var box = stage.insert(new Q.UI.Container({
@@ -216,55 +404,26 @@ window.addEventListener("load",function() {
 	                                        label: stage.options.label }));
 	  button.on("click",function() {
 	    Q.clearStages();
-	    Q.stageScene('level1');
+		Q.stageScene("cannnon",2);
+		Q.stageScene("level1", 1);
+		Q.stageScene("level2", 0);
 	  });
 	  box.fit(20);
 	});
 
 
-	Q.Sprite.extend("View", {
-		init:function(p) {
-			this._super({
-				asset: "view.png",
-				x: window.innerWidth/2,
-				y: window.innerHeight/2
-			})
-		},
-
-		step: function(dt){
-			this.p.x += .5;
-		}
-	})
-
-	Q.Sprite.extend("ProgBar", {
-		init:function(p) {
-			this._super({
-				asset: "meter_bar.png",
-				x: window.innerWidth/2,
-				y: window.innerHeight - 50
-
-			})
-		}
-	})
-
-	//--------------------------------------------------------------------------
-	//--------------------------------------------------------------------------
-	//Quintus scene definitions
-
 	Q.scene("level1",function(stage) {
 
 		var reedtard = stage.insert(new Q.Fatty());
-	
+
 		var floor = stage.insert(new Q.Floor());
 		var prog_bar = stage.insert(new Q.ProgBar());
-		var score = stage.insert(new Q.ScoreBoard());
+		var score = stage.insert(new Q.ScoreMarker());
+		///var Powerup = stage.insert(new Q.PowerUP_2xscale());
 
 	});
 
 	Q.scene("level2", function(stage) {
-
-
-	
 	stage.insert(new Q.Repeater({ asset: "sky.png",
 										repeatX: true,
 										repeatY: true,
@@ -277,19 +436,30 @@ window.addEventListener("load",function() {
 
 });
 
-	Q.scene("cannnon", function(stage) {
+	Q.scene("P1", function(stage) {
 
-		var el_canon = stage.insert(new Q.Cannon());
+		//var player_1 = stage.insert(new Q.Player1());
+		//var player_2 = stage.insert(new Q.Player2());
+		var player_1 = stage.insert(new Q.Player1());
+	})
+
+	Q.scene("P2", function(stage){
+
+		var player_2 = stage.insert(new Q.Player2());
 	})
 
 	//-----------------------------------------------------------------
 	//-----------------------------------------------------------------
 	//Quintus loading all assets and executing the game code
 
-	Q.load("fatty.png, food_1.png, food_2.png, food_3.png, floor.png, sky.png, stick.png, bush.png, view.png, meter_bar.png, cannon.png",function() {
-		Q.stageScene("cannnon",2);
+	Q.load("fatty.png, apple.png, beer.png, orange.png, grape.png, steroids.png, fries.png, floor.png, sky.png, stick.png, view.png, progbar.png, cannon.png, 2xscale.png",function() {
+		Q.stageScene("P2", 3);
+		Q.stageScene("P1",  2);
 		Q.stageScene("level1", 1);
 		Q.stageScene("level2", 0);
 
 	});
 });
+
+
+// STATIC POWER-UPS APPEAR FEQUENTLY

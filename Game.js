@@ -86,12 +86,15 @@ window.addEventListener("load",function() {
 	{
 		if(player_id == 1) //if player 1
 		{
+			//do calculations
 			_angle_player1 = Math.atan(_mouse_y/_mouse_x);
 			_angle_player1 *= (180/Math.PI);
 		}
 
 		if(player_id == 2) //if player 2
 		{
+			//do calculations
+			//also have to adjust for being on the top right corner of the screen
 			var adjusted_x = _window_width - _mouse_x
 			_angle_player2 = Math.atan(adjusted_x/_mouse_y);
 			_angle_player2 *= (180/Math.PI);
@@ -99,7 +102,7 @@ window.addEventListener("load",function() {
 		}
 	}
 
-	function getMousePosition(mp)
+	function getMousePosition(mp) //gets the current mouse position at the time called
 	{
 		_mouse_x = mp.pageX;
 		_mouse_y = mp.pageY;
@@ -120,6 +123,7 @@ window.addEventListener("load",function() {
 	function shootGoodFood() //function used for player one shooting
 	{
 
+		//limiting the strength for the shot 
 		if(_mouse_x > (_window_width/1.25))
 			_mouse_x = _window_width/1.25;
 		if(_mouse_y > (_window_height/1.25))
@@ -128,9 +132,9 @@ window.addEventListener("load",function() {
 		_velocity_x = (_mouse_x);
 		_velocity_y = (_mouse_y);
 
-		Q.stage(1).insert(new Q.GoodFood());
+		Q.stage(1).insert(new Q.GoodFood()); //inserting the new food at point (0,0)
 
-		var obj = Q.stage(1).locate(0,0);
+		var obj = Q.stage(1).locate(0,0); //creating a local variable to manipulate that object
 
 		//moving the newly created sprite object to the start point which
 		//is at the mouth of the canon
@@ -148,15 +152,16 @@ window.addEventListener("load",function() {
 	function shootBadFood() //function used for player two shooting
 	{
 
+		//limiting the strength of the shot
 		if(_mouse_x < (_window_width/4))
 		 	_mouse_x = _window_width/4;
 		if(_mouse_y > (_window_height/1.25))
 			_mouse_y = _window_height/1.25;
 
-		_velocity_x = ((_window_width) - _mouse_x);
+		_velocity_x = ((_window_width) - _mouse_x); //some adjustments for being on top right
 		_velocity_y = (_mouse_y);
 
-		Q.stage(1).insert(new Q.BadFood());
+		Q.stage(1).insert(new Q.BadFood()); //inserting a new food at point (0,0)
 
 		var food = Q.stage(1).locate(0,0);
 
@@ -165,7 +170,7 @@ window.addEventListener("load",function() {
 		food.p.x = (Math.cos(angle_rad) * 125) + _window_width;
 		food.p.y = Math.sin(angle_rad) * 125;
 
-		food.p.velocity_x = -_velocity_x;
+		food.p.velocity_x = -_velocity_x; //velocity is set to negative since its moving left
 		food.p.velocity_y = _velocity_y;
 	}
 	//-------------------------------------------------------------------
@@ -314,26 +319,6 @@ window.addEventListener("load",function() {
 		}
 	})
 
-	Q.Sprite.extend("PowerUP_2xscale", {
-		init: function(p) {
-			this._super({
-				asset: "2xscale.png",
-				x: _window_width/2 ,
-				y: 400,
-
-			});
-
-		this.on("hit.sprite", function(collision) {
-
-			// if(collision.obj.isA("BadFood"))
-			// {
-			// 	this.destroy();
-			// }
-		})
-	}
-
-	})
-
 	Q.Sprite.extend("Floor", {
 		init: function(p) {
 			this._super({
@@ -422,7 +407,6 @@ window.addEventListener("load",function() {
 		var floor = stage.insert(new Q.Floor());
 		var prog_bar = stage.insert(new Q.ProgBar());
 		var score = stage.insert(new Q.ScoreMarker());
-		///var Powerup = stage.insert(new Q.PowerUP_2xscale());
 
 	});
 

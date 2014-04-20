@@ -1,4 +1,5 @@
 
+
 var express = require('express');
 var routes = require('./routes');
 var http = require('http');
@@ -42,8 +43,14 @@ function randomPos() //returns a random position inside the window
 	
 function randomInterval() //determines the interval between reedtards movements
 {
-	return Math.floor((Math.random() * 150) + 100); //random interval between 100-150
+	return Math.floor((Math.random() * 10) + 100); //random interval between 100-150
 }	
+
+//---------------------------------
+
+
+
+//---------------------------------
 
 
 var serv_io = io.listen(server);
@@ -69,7 +76,8 @@ serv_io.sockets.on('connection',function(socket){
 	socket.on('Clients Connected', function(data){
 	
 		innerWidth = data.WindowWidth;
-
+		initialPosition = randomPos();
+		
 		//Send initialPosition and initial Interval to clients
 		serv_io.sockets.emit('Game Start',
 		{		
@@ -92,16 +100,14 @@ serv_io.sockets.on('connection',function(socket){
 
 	//Send Intervals to clients
 	socket.on('Request Interval-Position', function(data){
-	
-		clock = clock - 1;
 		
 		//clock has to reach 0 in order for us to send information
-		if( clock == 1 ){
+		if( clock == 2 ){
 		
 			clock = clock - 1;
 		}	
 		
-		else if( clock == 0 ){
+		else if( clock == 1 ){
 		
 			fattyPosition = randomPos();
 			fattyInterval = randomInterval();
@@ -118,19 +124,7 @@ serv_io.sockets.on('connection',function(socket){
 
 	
 	
-//Whenever we receive the mouseInfo event, send info to both clients
-	socket.on('mouseInfo1',function(data){
-	
-		//mouseUpdate4 will be taken by all, but only processed by client 2
-		serv_io.sockets.emit('mouseUpdate4',
-		{	
-			mousePositionX: data.mousePositionX,
-			mousePositionY: data.mousePositionY
-			//CannonAngle: data.CannonAngle,
-			
-		});
-	
-	});
+//Whenever we receive the Food Signal, send mouse info needed
 
 	socket.on('mouseInfo2',function(data){
 	
@@ -182,14 +176,28 @@ serv_io.sockets.on('connection',function(socket){
 	});
 	
 //----Deals with drawing food on the clients
-	socket.on('goodFood',function(){
+	socket.on('goodFood',function(data){
 	
-		serv_io.sockets.emit('drawGoodFood');
+		serv_io.sockets.emit('drawGoodFood',
+		{	
+			GoodGuyPositionX: data.GoodGuyPositionX,
+			GoodGuyPositionY: data.GoodGuyPositionY
+			//CannonAngle: data.CannonAngle,
+			
+		});
+	
 	});
 	
-	socket.on('badFood',function(){
+	socket.on('badFood',function(data){
 	
-		serv_io.sockets.emit('drawBadFood');
+		serv_io.sockets.emit('drawBadFood',
+		{	
+			BadGuyPositionX: data.BadGuyPositionX,
+			BadGuyPositionY: data.BadGuyPositionY
+			//CannonAngle: data.CannonAngle,
+			
+		});
+	
 	});
 	
 //----Deals with the score of the game

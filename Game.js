@@ -357,7 +357,10 @@ window.addEventListener("load",function() {
 			this.p.x = _score;
 
 			if(_score >= (_window_width/2 + 500))
-				Q.stageScene("endGame",1, { label: "You Won!" });
+				Q.stageScene("endGame",1, { label: "Player 1 Won!" });
+
+			if(_score <= (_window_width/2 - 500))
+				Q.stageScene("endGame",1, { label: "Player 2 Won!"});
 
 
 		}

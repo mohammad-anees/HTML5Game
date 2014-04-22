@@ -2,13 +2,15 @@ window.addEventListener("load",function() {
 
 	//initializing the quintus engine that will show up on the page
 	var Q = Quintus().include("Sprites, Input, Scenes, Anim, 2D, UI, Audio")
+    Q.enableSound();
 	Q.setup({maximize: true});
 
 	//--------------------------------------------------------------
 	//--------------------------------------------------------------
 	//initalizing global variables used throughout
 
-	var _interval =  randomInterval(); //the interval between movements
+	var _interval_PC =  randomInterval(); //the interval between movements of the PC
+	var _interval_PU = 10; // the interval between powerups showing up
 
 	var _mouse_x= 0; //global var used to get the mouse position x
 	var _mouse_y = 0; //global var used to get the mouse positoin y
@@ -25,13 +27,19 @@ window.addEventListener("load",function() {
 	var _scale_player1 = 1; //initial scales of player 1 and 2, used for powerups
 	var _scale_player2 = 1; 
 
+	var _score_player1 = 1; //score multipleiears for player 1 and 2, used for powerups
+	var _score_player2 = 1;
+
+	var _fire_rate_player1 = 30; //multi shot boolean check for players 1 and 2, used for powerups
+	var _fire_rate_player2 = 30;
+
 	var _score = _window_width/2; //score of the game
 
 	//----------------------------------------------------------------
 	//----------------------------------------------------------------
 	//some helper functions used throughout
 
-	function randomPos() //returns a random position inside the window
+	function randomPosX() //returns a random position inside the window
 	{
 	 	return Math.floor((Math.random() * (_window_width - 300)) + 300);
 	}
@@ -43,43 +51,66 @@ window.addEventListener("load",function() {
 
 	function randomGoodFood() //determines the good food to load next
 	{
-		var rand = Math.floor((Math.random() * 3 ) + 1);
+		var rand = Math.floor((Math.random() * 5 ) + 1);
 
 		if(rand == 1)
-			return "apple.png";
+			return "milk.png";
 		else if(rand == 2)
-			return "orange.png";
+			return "lemon.png";
 		else if(rand == 3)
-			return "grape.png";
+			return "carrot.png";
+		else if(rand == 4)
+			return "corn.png";
+		else if(rand == 5)
+			return "eggplant.png";
 		else
 			return "error";
 	}
 
-	function randomBadFood()
+	function randomBadFood() //determines a random bad food to shoot
 	{
-		var rand = Math.floor((Math.random() * 3) + 1);
+		var rand = Math.floor((Math.random() * 5) + 1);
 
 		if(rand == 1)
-			return "beer.png";
+			return "lolipop.png";
 		else if(rand == 2)
-			return "steroids.png";
+			return "soda.png";
 		else if(rand == 3)
-		 	return "fries.png";
+		 	return "burger.png";
+		else if(rand == 4)
+			return "beer.png";
+		else if(rand == 5)
+			return "hotdog.png";
 		else 
 			return "error";
 	}
 
-	function randomPowerUP()
+	function randomPowerUP() //determines a random powerup to put on screen
 	{
-		var rand = Math.floor((Math.random() * 2) + 1);
+		var rand = Math.floor((Math.random() * 3) + 1);
 
 		if(rand == 1)
-			return "rapidfire";
+			return "buckshot";
 		else if(rand == 2)
-			return "2xmulti";
+			return "2xscore";
 		else if(rand == 3)
 			return "2xscale";
 
+	}
+
+	function resetAttributes() //reset all powerups for all players back to normal
+	{	
+		//reset scales
+		_scale_player1 = 1;
+		_scale_player2 = 1;
+
+		//reset score multiplier
+		_score_player1 = 1;
+		_score_player2 = 1;
+
+		//reset fire rate
+		_fire_rate_player1 = 30;
+		_fire_rate_player2 = 30;
 	}
 
 	function calcCanonAngle(player_id) //calculates the angle for player1/2 canons
@@ -132,9 +163,9 @@ window.addEventListener("load",function() {
 		_velocity_x = (_mouse_x);
 		_velocity_y = (_mouse_y);
 
-		Q.stage(1).insert(new Q.GoodFood()); //inserting the new food at point (0,0)
+		Q.stage(2).insert(new Q.GoodFood()); //inserting the new food at point (0,0)
 
-		var obj = Q.stage(1).locate(0,0); //creating a local variable to manipulate that object
+		var obj = Q.stage(2).locate(0,0); //creating a local variable to manipulate that object
 
 		//moving the newly created sprite object to the start point which
 		//is at the mouth of the canon
@@ -161,9 +192,9 @@ window.addEventListener("load",function() {
 		_velocity_x = ((_window_width) - _mouse_x); //some adjustments for being on top right
 		_velocity_y = (_mouse_y);
 
-		Q.stage(1).insert(new Q.BadFood()); //inserting a new food at point (0,0)
+		Q.stage(2).insert(new Q.BadFood()); //inserting a new food at point (0,0)
 
-		var food = Q.stage(1).locate(0,0);
+		var food = Q.stage(2).locate(0,0);
 
 		//moving the new sprite obect to the start point at the mouth of the canon
 		var angle_rad = (_angle_player2 * Math.PI)/180; //converting player 2 angle to radian
@@ -179,7 +210,7 @@ window.addEventListener("load",function() {
 
 	Q.Sprite.extend("Fatty", {
 	init: function(p) {
-		var pos_fatty = randomPos(); //the position fatty starts at
+		var pos_fatty = randomPosX(); //the position fatty starts at
 	  	this._super({
 	    	asset: "fatty.png",
 	    	x: pos_fatty,
@@ -194,12 +225,12 @@ window.addEventListener("load",function() {
 
 		step: function(dt) {
 
-		  _interval--;
+		  _interval_PC--;
 
-		  if(_interval == 0)
+		  if(_interval_PC == 0)
 		  {
-		      _interval = randomInterval();
-		      var newPos = randomPos();
+		      _interval_PC = randomInterval();
+		      var newPos = randomPosX();
 		      //moving fatty to the new position once the interval is finished, takes 2 seconds and accelerates and decelearates
 		      this.animate({ x : newPos}, 2, Q.Easing.Quadratic.InOut);  
 		  }
@@ -218,25 +249,46 @@ window.addEventListener("load",function() {
 
 		this.add("tween");
 
+
 		this.on("hit.sprite", function(collision) {
 
 			if(collision.obj.isA("Fatty")) {
 				this.destroy();
-				_score += 5;
+				_score += (5 * _score_player1);
 			}
 
-			// else if(collision.obj.isA("Food")) {
-			// 	this.p.velocity_x *=-1;
-			// }
+			else if(collision.obj.isA("Scalex2")) {
+				_scale_player1 = 1.5;
+				this.destroy();
+			}
+
+			else if(collision.obj.isA("Scorex2")) {
+				_score_player1 = 2;
+				this.destroy();
+			}
+
+			else if(collision.obj.isA("Buckshot")) {
+				_fire_rate_player1 = 10;
+				this.destroy();
+			}
+
+			else if(collision.obj.isA("BadFood")) {
+				this.p.vx = -1;
+			}
 		})
 
 		},
 
 		step: function(dt){
 
+			//applying physics to the food
 			this.p.velocity_y += this.p.g * dt;
 			this.p.y += this.p.velocity_y * dt;
 			this.p.x += this.p.velocity_x * dt;
+
+			this.p.angle -= 1;
+
+			this.p.scale = _scale_player1;
 
 			if(this.p.y >= _window_height + 100)
 				this.destroy();
@@ -257,17 +309,32 @@ window.addEventListener("load",function() {
 
 		this.add("tween");
 
+
 		this.on("hit.sprite", function(collision) {
 
 			if(collision.obj.isA("Fatty")) {
 				this.destroy();
-				_score -= 5;
+				_score -= (5 * _score_player2);
 			}
 
-			 else if(collision.obj.isA("PowerUP_2xscale")) {
-				_scale_player2 = 10;
+			else if(collision.obj.isA("Scalex2")) {
+				_scale_player2 = 1.5;
 				this.destroy();
-			 }
+			}
+
+			else if(collision.obj.isA("Scorex2")) {
+				_score_player2 = 2;
+				this.destroy();
+			}
+
+			else if(collision.obj.isA("Buckshot")) {
+				_fire_rate_player2 = 10;
+				this.destroy();
+			}
+
+			else if(collision.obj.isA("GoodFood")) {
+				this.p.vx = -1;
+			}
 		})
 
 		},
@@ -278,11 +345,180 @@ window.addEventListener("load",function() {
 			this.p.y += this.p.velocity_y * dt;
 			this.p.x += this.p.velocity_x * dt;
 
+			this.p.angle += 1;
+
+			this.p.scale = _scale_player2;
+
 			if(this.p.y >= _window_height + 100)
 				this.destroy();
 
+
 		}
 
+	})
+
+	Q.Sprite.extend("Scalex2", {
+		init: function(p) {
+			var posX = randomPosX();
+			this._super({
+				asset: "2xscale.png",
+				x: posX,
+				y: -20,
+				vx: 0
+			});
+
+			this.add("2d");
+
+			this.on("hit.sprite", function(collision) {
+
+			if(collision.obj.isA("Fatty")) {
+				//this.destroy();
+			}
+
+			else if(collision.obj.isA("Floor")) {
+				//this.destroy();
+				this.p.vx = -500;
+			}
+
+			else if(collision.obj.isA("BadFood")) {
+				this.destroy();
+
+			}
+
+			else if(collision.obj.isA("GoodFood")) {
+				this.destroy();
+			}
+		})
+
+		},
+
+		step: function(dt) {
+
+			this.p.x += this.p.vx * dt;
+			this.p.angle -= 5;
+		}
+	})
+
+	Q.Sprite.extend("Scorex2", {
+		init: function(p) {
+			var posX = randomPosX();
+			this._super({
+				asset: "2xscore.png",
+				x: posX,
+				y: -20,
+				vx: 0
+			});
+
+			this.add("2d");
+
+			this.on("hit.sprite", function(collision) {
+
+			if(collision.obj.isA("Fatty")) {
+				//this.destroy();
+			}
+
+			else if(collision.obj.isA("Floor")) {
+				//this.destroy();
+				this.p.vx = -500;
+			}
+
+			else if(collision.obj.isA("BadFood")) {
+				this.destroy();
+
+			}
+
+			else if(collision.obj.isA("GoodFood")) {
+				this.destroy();
+			}
+		})
+
+		},
+
+		step: function(dt) {
+
+			this.p.x += this.p.vx * dt;
+			this.p.angle -= 5;
+
+		}
+	})
+
+	Q.Sprite.extend("Buckshot", {
+		init: function(p) {
+			var posX = randomPosX();
+			this._super({
+				asset: "buckshot.png",
+				x: posX,
+				y: -20,
+				vx: 0
+			});
+
+			this.add("2d");
+
+			this.on("hit.sprite", function(collision) {
+
+			if(collision.obj.isA("Fatty")) {
+				//this.destroy();
+			}
+
+			else if(collision.obj.isA("Floor")) {
+				//this.destroy();
+				this.p.vx = -500;
+			}
+
+			else if(collision.obj.isA("BadFood")) {
+				this.destroy();
+
+			}
+
+			else if(collision.obj.isA("GoodFood")) {
+				this.destroy();
+			}
+		})
+
+		},
+
+		step: function(dt) {
+
+			this.p.x += this.p.vx * dt;
+			this.p.angle -= 5;
+
+		}
+	})
+
+	Q.Sprite.extend("PowerUpHandler", {
+		init: function(p) {
+			this._super({
+				x:0,
+				y:0
+			});
+
+		},
+
+		step: function(dt) {
+
+			--_interval_PU;
+
+			if(_interval_PU == 0)
+			{
+				var powerup_type = randomPowerUP();
+
+
+				if(powerup_type == "2xscale")
+					Q.stage(2).insert(new Q.Scalex2());
+				else if(powerup_type == "2xscore")
+					Q.stage(2).insert(new Q.Scorex2());
+				else if(powerup_type == "buckshot")
+					Q.stage(2).insert(new Q.Buckshot());
+				else
+					Q.stage(2).insert(new Q.Scalex2());
+
+
+				resetAttributes(); //function that resets all the attributes of all players back to normal
+
+				_interval_PU = 1000;
+			}
+
+		}
 	})
 
 	Q.Sprite.extend("Player1", {
@@ -291,13 +527,22 @@ window.addEventListener("load",function() {
 				asset: "cannon.png",
 				x: 0,
 				y: 0,
-				angle: 45
+				angle: 45,
+				fire_rate: 30
 			})
 		},
 
 		step: function(dt) {
-			document.onmousemove = getMousePosition;
-			document.onmousedown = shootGoodFood;
+			//document.onmousemove = getMousePosition;
+			//document.onmousedown = shootGoodFood;
+			//shootGoodFood();
+
+			--this.p.fire_rate;
+			if(this.p.fire_rate == 0)
+			{
+				shootGoodFood();
+				this.p.fire_rate = 30;
+			}
 			this.p.angle = _angle_player1;
 		}
 	})
@@ -308,13 +553,21 @@ window.addEventListener("load",function() {
 				asset: "cannon.png",
 				x: _window_width,
 				y: 0,
-				angle: 225
+				angle: 225,
+				fire_rate: 30
 			})
 		},
 
 		step: function(dt) {
-			//document.onmousemove = getMousePosition;
+			document.onmousemove = getMousePosition;
 			document.onmousedown = shootBadFood;
+
+			// --this.p.fire_rate;
+			// if(this.p.fire_rate == 0)
+			// {
+			// 	shootBadFood();
+			// 	this.p.fire_rate = 30;
+			// }
 			this.p.angle = _angle_player2;
 		}
 	})
@@ -322,7 +575,7 @@ window.addEventListener("load",function() {
 	Q.Sprite.extend("Floor", {
 		init: function(p) {
 			this._super({
-				asset: "floor.png",
+				asset: "floor_transparent.png",
 				x: 500,
 				y: _window_height
 			})
@@ -334,7 +587,7 @@ window.addEventListener("load",function() {
 			this._super({
 				asset: "stick.png",
 				x: _window_width/2,
-				y: _window_height - 50
+				y: 40
 			})
 		},
 
@@ -371,8 +624,7 @@ window.addEventListener("load",function() {
 			this._super({
 				asset: "progbar.png",
 				x: _window_width/2,
-				y: _window_height - 50
-
+				y: 40
 			})
 		}
 	})
@@ -399,24 +651,59 @@ window.addEventListener("load",function() {
 	  box.fit(20);
 	});
 
+	Q.scene('powerups', function(stage) {
+
+		var pup_handler = stage.insert(new Q.PowerUpHandler());
+	})
+
+	Q.scene('progressbar', function(stage) {
+
+		var prog_bar = stage.insert(new Q.ProgBar());
+		var score = stage.insert(new Q.ScoreMarker());
+	})
+
 
 	Q.scene("level1",function(stage) {
 
 		var reedtard = stage.insert(new Q.Fatty());
 
 		var floor = stage.insert(new Q.Floor());
-		var prog_bar = stage.insert(new Q.ProgBar());
-		var score = stage.insert(new Q.ScoreMarker());
 
 	});
 
 	Q.scene("level2", function(stage) {
 	stage.insert(new Q.Repeater({ asset: "sky.png",
 										repeatX: true,
-										repeatY: true,
-										speedX: 4,
+										repeatY: false,
+										speedX: .25,
 										type: 0
-										}));
+									}));
+
+	var clouds = stage.insert(new Q.Repeater({ asset: "clouds.png",
+													repeatX: true,
+													repeatY: false,
+													speedX: 1,
+													type: 0
+												}));
+
+	var city = stage.insert(new Q.Repeater({ asset: "city.png",
+													repeatX: true,
+													repeatY: false,
+													speedX: 5,
+													type: 0
+												}));
+
+
+
+	var floor = stage.insert(new Q.Repeater({ asset: "floor.png",
+													repeatX: true,
+													repeatY: false,
+													speedX: 20,
+													type: 0
+												}));
+
+	city.p.y = _window_height - 760;
+	floor.p.y = _window_height - 740;
 
 	var view = stage.insert(new Q.View());
 	stage.add("viewport").follow(view);
@@ -439,10 +726,12 @@ window.addEventListener("load",function() {
 	//-----------------------------------------------------------------
 	//Quintus loading all assets and executing the game code
 
-	Q.load("fatty.png, apple.png, beer.png, orange.png, grape.png, steroids.png, fries.png, floor.png, sky.png, stick.png, view.png, progbar.png, cannon.png, 2xscale.png",function() {
-		Q.stageScene("P2", 3);
-		Q.stageScene("P1",  2);
-		Q.stageScene("level1", 1);
+	Q.load(["fatty.png", "lime.png", "lemon.png", "carrot.png", "corn.png", "eggplant.png", "milk.png", "lolipop.png", "soda.png", "burger.png", "hotdog.png", "beer.png", "floor.png", "floor_transparent.png", "city.png", "sky.png", "clouds.png", "stick.png", "view.png", "progbar.png", "cannon.png", "2xscale.png", "2xscore.png", "buckshot.png"],function() {
+		Q.stageScene("powerups", 5);
+		Q.stageScene("P2", 4);
+		Q.stageScene("P1",  3);
+		Q.stageScene("level1", 2);
+		Q.stageScene("progressbar", 1);
 		Q.stageScene("level2", 0);
 
 	});

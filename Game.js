@@ -30,9 +30,6 @@ window.addEventListener("load",function() {
 	var _score_player1 = 1; //score multipleiears for player 1 and 2, used for powerups
 	var _score_player2 = 1;
 
-	var _fire_rate_player1 = 30; //multi shot boolean check for players 1 and 2, used for powerups
-	var _fire_rate_player2 = 30;
-
 	var _score = _window_width/2; //score of the game
 
 	//----------------------------------------------------------------
@@ -90,12 +87,24 @@ window.addEventListener("load",function() {
 		var rand = Math.floor((Math.random() * 3) + 1);
 
 		if(rand == 1)
-			return "buckshot";
+			return "score_reset";
 		else if(rand == 2)
 			return "2xscore";
 		else if(rand == 3)
 			return "2xscale";
 
+	}
+
+	function randomSky() //determines the type of scrolling background
+	{
+		var rand = Math.floor((Math.random() * 2) + 1); //random integer from 1 to 2
+
+		if(rand == 1)
+			return "sunset.png";
+		else if(rand == 2)
+			return "sunrise.png";
+		else
+			return "error";
 	}
 
 	function resetAttributes() //reset all powerups for all players back to normal
@@ -108,9 +117,6 @@ window.addEventListener("load",function() {
 		_score_player1 = 1;
 		_score_player2 = 1;
 
-		//reset fire rate
-		_fire_rate_player1 = 30;
-		_fire_rate_player2 = 30;
 	}
 
 	function calcCanonAngle(player_id) //calculates the angle for player1/2 canons
@@ -267,8 +273,8 @@ window.addEventListener("load",function() {
 				this.destroy();
 			}
 
-			else if(collision.obj.isA("Buckshot")) {
-				_fire_rate_player1 = 10;
+			else if(collision.obj.isA("ScoreReset")) {
+				_score = _window_width/2;
 				this.destroy();
 			}
 
@@ -327,8 +333,8 @@ window.addEventListener("load",function() {
 				this.destroy();
 			}
 
-			else if(collision.obj.isA("Buckshot")) {
-				_fire_rate_player2 = 10;
+			else if(collision.obj.isA("ScoreReset")) {
+				_score = _window_width/2;
 				this.destroy();
 			}
 
@@ -442,11 +448,11 @@ window.addEventListener("load",function() {
 		}
 	})
 
-	Q.Sprite.extend("Buckshot", {
+	Q.Sprite.extend("ScoreReset", {
 		init: function(p) {
 			var posX = randomPosX();
 			this._super({
-				asset: "buckshot.png",
+				asset: "score+100.png",
 				x: posX,
 				y: -20,
 				vx: 0
@@ -507,8 +513,8 @@ window.addEventListener("load",function() {
 					Q.stage(2).insert(new Q.Scalex2());
 				else if(powerup_type == "2xscore")
 					Q.stage(2).insert(new Q.Scorex2());
-				else if(powerup_type == "buckshot")
-					Q.stage(2).insert(new Q.Buckshot());
+				else if(powerup_type == "score_reset")
+					Q.stage(2).insert(new Q.ScoreReset());
 				else
 					Q.stage(2).insert(new Q.Scalex2());
 
@@ -524,7 +530,7 @@ window.addEventListener("load",function() {
 	Q.Sprite.extend("Player1", {
 		init: function(p) {
 			this._super({
-				asset: "cannon.png",
+				asset: "player_1.png",
 				x: 0,
 				y: 0,
 				angle: 45,
@@ -550,7 +556,7 @@ window.addEventListener("load",function() {
 	Q.Sprite.extend("Player2", {
 		init: function(p) {
 			this._super({
-				asset: "cannon.png",
+				asset: "player_2.png",
 				x: _window_width,
 				y: 0,
 				angle: 225,
@@ -672,7 +678,9 @@ window.addEventListener("load",function() {
 	});
 
 	Q.scene("level2", function(stage) {
-	stage.insert(new Q.Repeater({ asset: "sky.png",
+
+	var time_of_day = randomSky();
+	stage.insert(new Q.Repeater({ asset: time_of_day ,
 										repeatX: true,
 										repeatY: false,
 										speedX: .25,
@@ -686,10 +694,12 @@ window.addEventListener("load",function() {
 													type: 0
 												}));
 
+
+
 	var city = stage.insert(new Q.Repeater({ asset: "city.png",
 													repeatX: true,
 													repeatY: false,
-													speedX: 5,
+													speedX: 4,
 													type: 0
 												}));
 
@@ -702,8 +712,8 @@ window.addEventListener("load",function() {
 													type: 0
 												}));
 
-	city.p.y = _window_height - 760;
-	floor.p.y = _window_height - 740;
+	city.p.y = _window_height / 10;//_window_height - 760;
+	floor.p.y = _window_height / 6.5; //_window_height - 740;
 
 	var view = stage.insert(new Q.View());
 	stage.add("viewport").follow(view);
@@ -726,7 +736,10 @@ window.addEventListener("load",function() {
 	//-----------------------------------------------------------------
 	//Quintus loading all assets and executing the game code
 
-	Q.load(["fatty.png", "lime.png", "lemon.png", "carrot.png", "corn.png", "eggplant.png", "milk.png", "lolipop.png", "soda.png", "burger.png", "hotdog.png", "beer.png", "floor.png", "floor_transparent.png", "city.png", "sky.png", "clouds.png", "stick.png", "view.png", "progbar.png", "cannon.png", "2xscale.png", "2xscore.png", "buckshot.png"],function() {
+	Q.load(["fatty.png", "lime.png", "lemon.png", "carrot.png", "corn.png", "eggplant.png", "milk.png", "lolipop.png", "soda.png", "burger.png", "hotdog.png", "beer.png", //Food Assets
+			"floor.png", "floor_transparent.png", "city.png", "clouds.png", "sunrise.png", "sunset.png", //background assets
+			"stick.png", "view.png", "progbar.png", "player_1.png", "player_2.png", "2xscale.png", "2xscore.png", "score+100.png"], //misc assets
+	function() {
 		Q.stageScene("powerups", 5);
 		Q.stageScene("P2", 4);
 		Q.stageScene("P1",  3);
